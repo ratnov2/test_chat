@@ -1,0 +1,23 @@
+.login {
+  max-width: 360px;
+  margin: 12vh auto;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 32px 16px;
+  background: var(--surface-color);
+  border-radius: var(--border-radius-big);
+  box-shadow: var(--column-box-shadow);
+}
+.login h1 {
+  margin: 0;
+  font-size: 24px;
+  font-weight: var(--font-weight-bold);
+  text-align: center;
+}
+.login p {
+  margin: 0 0 8px;
+  color: var(--secondary-text-color);
+  text-align: center;
+  font-size: 14px;
+}

@@ -1,0 +1,26 @@
+.form {
+  display: flex;
+  gap: 8px;
+  padding: 8px 12px;
+}
+.form input {
+  flex: 1;
+  min-width: 0;
+  height: 2.75rem;
+  border-radius: 1.375rem;
+  background: var(--input-search-bg);
+  border-color: var(--input-search-bg);
+  padding: 0 1rem;
+}
+.form input:focus {
+  border-color: var(--primary-color);
+  background: var(--surface-color);
+}
+.form button {
+  width: 2.75rem;
+  height: 2.75rem;
+  padding: 0;
+  border-radius: 50%;
+  font-size: 22px;
+  line-height: 1;
+}

@@ -1,0 +1,54 @@
+.composer {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1;
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  padding: 8px 16px 16px;
+  background: transparent;
+  pointer-events: none;
+}
+.composer > * {
+  pointer-events: auto;
+}
+.field {
+  flex: 1;
+  min-width: 0;
+  height: 3rem;
+  overflow: hidden;
+  border-radius: var(--border-radius-big);
+  background: var(--surface-color);
+  box-shadow: 0 1px 2px rgba(16, 35, 47, 0.15);
+  transition: height 0.2s var(--transition-standard-easing);
+}
+.input {
+  min-height: 3rem;
+  max-height: min(20rem, 50vh);
+  overflow-y: auto;
+  padding: calc((3rem - 1.3125em) / 2) 1rem;
+  outline: none;
+  white-space: pre-wrap;
+  word-break: break-word;
+  line-height: 1.3125;
+}
+.input:empty::before {
+  content: attr(data-placeholder);
+  color: var(--input-placeholder-color, var(--secondary-text-color));
+  pointer-events: none;
+}
+.composer button:disabled {
+  opacity: 1;
+  background: color-mix(in srgb, var(--primary-color) 30%, var(--surface-color));
+  color: rgba(255, 255, 255, 0.6);
+}
+.composer button {
+  width: 3rem;
+  height: 3rem;
+  padding: 0;
+  border-radius: 50%;
+  font-size: 18px;
+  box-shadow: 0 1px 2px rgba(16, 35, 47, 0.15);
+}
