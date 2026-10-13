@@ -4,17 +4,15 @@
 #   scp -r deploy root@<ip>:~/ && ssh root@<ip>
 #   DEPLOY_PUBKEY="$(cat deploy_key.pub)" bash deploy/server/init-vps.sh
 #
-# Переменные: DOMAIN, DEPLOY_USER, DEPLOY_PUBKEY, HTPASSWD_USER (логин для basic auth).
+# Переменные: DOMAIN, DEPLOY_USER, DEPLOY_PUBKEY.
 set -euo pipefail
 
 DOMAIN="${DOMAIN:-preview.margaretti.space}"
 DEPLOY_USER="${DEPLOY_USER:-deploy}"
-HTPASSWD_USER="${HTPASSWD_USER:-admin}"
 DEPLOY_PUBKEY="${DEPLOY_PUBKEY:-}"
 
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 CERT_DIR="/etc/letsencrypt/live/$DOMAIN"
-HTPASSWD_FILE="/etc/nginx/previews.htpasswd"
 
 [[ $EUID -eq 0 ]] || { echo "Запустите от root" >&2; exit 1; }
 for f in server/previews-register.sh ui/index.html nginx/previews.conf; do
@@ -24,7 +22,7 @@ done
 echo "==> Пакеты"
 export DEBIAN_FRONTEND=noninteractive
 apt-get update
-apt-get install -y nginx jq rsync apache2-utils certbot
+apt-get install -y nginx jq rsync certbot
 
 echo "==> Пользователь $DEPLOY_USER и каталоги"
 id "$DEPLOY_USER" &>/dev/null || adduser --disabled-password --gecos "" "$DEPLOY_USER"
@@ -47,13 +45,6 @@ fi
 echo "==> Скрипты и UI"
 install -m 755 "$HERE/server/previews-register.sh" /usr/local/bin/previews-register
 install -m 644 "$HERE/ui/index.html" /srv/previews-ui/index.html
-
-if [[ ! -f "$HTPASSWD_FILE" ]]; then
-  echo "==> Пароль для basic auth (логин: $HTPASSWD_USER)"
-  htpasswd -c "$HTPASSWD_FILE" "$HTPASSWD_USER"
-  chmod 640 "$HTPASSWD_FILE"
-  chgrp www-data "$HTPASSWD_FILE"
-fi
 
 if [[ ! -f "$CERT_DIR/fullchain.pem" ]]; then
   echo "==> Wildcard-сертификат (DNS-challenge)"
