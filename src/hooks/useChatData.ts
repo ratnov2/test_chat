@@ -1,14 +1,35 @@
-import { useEffect, useRef } from 'react'
-import { getChatHistory, getChats, type Credentials } from '../api'
+import { useCallback, useEffect, useRef, useState } from 'react'
+import { errorMessage, getChatHistory, getChats, type Credentials } from '../api'
 import { fromHistory } from '../mappers'
 import { actions } from '../store'
 
+export type SyncStatus = 'loading' | 'ready' | 'error'
+
 export function useChatsSync(creds: Credentials) {
+  const [state, setState] = useState<{ status: SyncStatus; error?: string }>({ status: 'loading' })
+  const [attempt, setAttempt] = useState(0)
+
   useEffect(() => {
-    getChats(creds)
-      .then((list) => actions.syncChats(list ?? []))
-      .catch(console.error)
-  }, [creds])
+    const ctl = new AbortController()
+    getChats(creds, ctl.signal)
+      .then((list) => {
+        actions.syncChats(list ?? [])
+        setState({ status: 'ready' })
+      })
+      .catch((e) => {
+        if (ctl.signal.aborted) return
+        console.error(e)
+        setState({ status: 'error', error: errorMessage(e) })
+      })
+    return () => ctl.abort()
+  }, [creds, attempt])
+
+  const retry = useCallback(() => {
+    setState({ status: 'loading' })
+    setAttempt((n) => n + 1)
+  }, [])
+
+  return { ...state, retry }
 }
 
 export function useChatHistory(creds: Credentials, chatId: string | null) {

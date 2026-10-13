@@ -9,9 +9,51 @@ export const DEFAULT_API_URL = 'https://api.green-api.com'
 const base = (c: Credentials, method: string) =>
   `${c.apiUrl.replace(/\/$/, '')}/waInstance${c.idInstance}/${method}/${c.apiTokenInstance}`
 
-async function request<T>(url: string, init?: RequestInit): Promise<T> {
-  const res = await fetch(url, init)
-  if (!res.ok) throw new Error(`GREEN-API: ${res.status} ${await res.text()}`)
+const REQUEST_TIMEOUT_MS = 30_000
+
+const STATUS_MESSAGES: Record<number, string> = {
+  400: 'Некорректный запрос',
+  401: 'Неверный idInstance или apiTokenInstance',
+  403: 'Доступ запрещён',
+  404: 'Инстанс не найден, проверьте idInstance и apiUrl',
+  429: 'Слишком много запросов, попробуйте чуть позже',
+  466: 'Превышена квота инстанса GREEN-API',
+}
+
+export class ApiError extends Error {
+  status?: number
+
+  constructor(message: string, status?: number) {
+    super(message)
+    this.name = 'ApiError'
+    this.status = status
+  }
+}
+
+export const errorMessage = (e: unknown) => {
+  if (e instanceof ApiError) return e.message
+  if (e instanceof DOMException && e.name === 'TimeoutError') return 'Сервер слишком долго не отвечает'
+  return 'Не удалось выполнить запрос'
+}
+
+async function request<T>(url: string, init: RequestInit = {}): Promise<T> {
+  const timeout = AbortSignal.timeout(REQUEST_TIMEOUT_MS)
+  const signal = init.signal ? AbortSignal.any([init.signal, timeout]) : timeout
+  let res: Response
+  try {
+    res = await fetch(url, { ...init, signal })
+  } catch (e) {
+    if (e instanceof TypeError) throw new ApiError('Нет соединения с сервером')
+    throw e
+  }
+  if (!res.ok) {
+    const body = await res.text().catch(() => '')
+    console.error(`GREEN-API: ${res.status} ${body}`)
+    throw new ApiError(
+      STATUS_MESSAGES[res.status] ?? (res.status >= 500 ? 'Ошибка сервера, попробуйте позже' : `Ошибка ${res.status}`),
+      res.status,
+    )
+  }
   const text = await res.text()
   return (text ? JSON.parse(text) : null) as T
 }
@@ -56,7 +98,8 @@ export interface ApiChat {
   phoneNumber: number
 }
 
-export const getChats = (c: Credentials) => request<ApiChat[] | null>(base(c, 'getChats'))
+export const getChats = (c: Credentials, signal?: AbortSignal) =>
+  request<ApiChat[] | null>(base(c, 'getChats'), { signal })
 
 export interface Notification {
   receiptId: number

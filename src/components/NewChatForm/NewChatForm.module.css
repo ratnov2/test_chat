@@ -1,6 +1,7 @@
 .form {
-  display: flex;
-  gap: 8px;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 4px 8px;
   padding: 8px 12px;
 }
 .form input {
@@ -17,10 +18,25 @@
   background: var(--surface-color);
 }
 .form button {
+  display: grid;
+  place-items: center;
   width: 2.75rem;
   height: 2.75rem;
   padding: 0;
   border-radius: 50%;
   font-size: 22px;
   line-height: 1;
+}
+.form input[aria-invalid='true'],
+.form input[aria-invalid='true']:focus {
+  border-color: var(--danger-color);
+}
+.form button.pending:disabled {
+  opacity: 1;
+}
+.error {
+  grid-column: 1 / -1;
+  padding: 0 1rem;
+  color: var(--danger-color);
+  font-size: 13px;
 }

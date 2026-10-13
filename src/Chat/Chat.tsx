@@ -18,7 +18,7 @@ export const Chat = ({ creds, onLogout }: { creds: Credentials; onLogout: () => 
   const main = useRef<HTMLElement>(null)
   const list = useRef<MessageListHandle>(null)
 
-  useChatsSync(creds)
+  const sync = useChatsSync(creds)
   useChatHistory(creds, active)
   useNotifications(creds)
   const requestAvatar = useAvatars(creds)
@@ -46,7 +46,15 @@ export const Chat = ({ creds, onLogout }: { creds: Credentials; onLogout: () => 
 
   return (
     <div className={styles.app} data-open={!!current}>
-      <Sidebar className={styles.sidebar} creds={creds} onLogout={onLogout} onChatVisible={requestAvatar} />
+      <Sidebar
+        className={styles.sidebar}
+        creds={creds}
+        status={sync.status}
+        error={sync.error}
+        onRetry={sync.retry}
+        onLogout={onLogout}
+        onChatVisible={requestAvatar}
+      />
       <main className={styles.main} ref={main}>
         {current ? (
           <>
